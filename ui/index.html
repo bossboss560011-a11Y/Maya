@@ -1,51 +1,1364 @@
-<!DOCTYPE html>
-
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="gbk" />
-    <title>Maya</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111114">
+    <title>Maya AI</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #111114;
+            color: #f2f0f5;
+            font-synthesis: none;
+            text-rendering: optimizeLegibility;
+            --muted: #9996a2;
+            --line: rgba(255, 255, 255, .09);
+            --panel: #19191e;
+            --accent: #a98bff;
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; min-width: 320px; min-height: 100vh; }
+        button, textarea { font: inherit; }
+        button { color: inherit; }
+
+        .app { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 264px;
+            flex: 0 0 264px;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px 16px;
+            border-right: 1px solid var(--line);
+            background: #151519;
+        }
+        .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            color: #17131f;
+            background: linear-gradient(145deg, #e2b5ff, #9f85ff 62%, #7c9bff);
+            font-size: 19px;
+            font-weight: 800;
+            box-shadow: 0 4px 22px #9f85ff35;
+            animation: logo-glow 3.2s ease-in-out infinite;
+        }
+        .brand-mark.is-waking { animation: logo-wake .8s cubic-bezier(.2,.8,.2,1) both; }
+        .brand-mark.is-listening { animation: logo-listen 1s ease-in-out infinite, logo-wake .8s ease-out 1; }
+        .brand-mark.is-thinking { animation: logo-think 1.2s ease-in-out infinite; }
+        .brand-mark.is-speaking { animation: logo-speak .65s ease-in-out infinite alternate; }
+        @keyframes logo-glow {
+            0%, 100% { transform: translateY(0) rotate(0); box-shadow: 0 4px 22px #9f85ff35; }
+            50% { transform: translateY(-2px) rotate(-4deg); box-shadow: 0 5px 28px #bd96ff70; }
+        }
+        @keyframes logo-wake {
+            0% { filter: brightness(.8); box-shadow: 0 0 0 #bd96ff00; }
+            65% { filter: brightness(1.5); box-shadow: 0 0 34px #bd96ffbb; }
+            100% { filter: brightness(1); box-shadow: 0 4px 22px #9f85ff55; }
+        }
+        @keyframes logo-listen {
+            0%, 100% { transform: scale(1); box-shadow: 0 4px 22px #9f85ff55; }
+            50% { transform: scale(1.1); box-shadow: 0 0 30px #bd96ffbb; }
+        }
+        @keyframes logo-think {
+            0%, 100% { box-shadow: 0 4px 22px #9f85ff55; }
+            50% { box-shadow: 0 0 30px #8bd7ffbb; }
+        }
+        @keyframes logo-speak {
+            from { transform: scale(1); box-shadow: 0 4px 22px #9f85ff55; }
+            to { transform: scale(1.08); box-shadow: 0 0 30px #bd96ffbb; }
+        }
+        .brand-name { font-size: 16px; font-weight: 680; letter-spacing: -.3px; }
+        .brand-label { color: var(--muted); font-size: 11px; font-weight: 500; }
+        .new-chat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            width: 100%;
+            margin: 31px 0 27px;
+            padding: 11px 12px;
+            border: 1px solid #ffffff1c;
+            border-radius: 10px;
+            background: #ffffff08;
+            cursor: pointer;
+            transition: background .18s, border-color .18s;
+        }
+        .new-chat:hover { background: #ffffff10; border-color: #ffffff32; }
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            margin: 0 0 22px;
+            padding: 10px 11px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            background: transparent;
+            color: #c8c5ce;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+        }
+        .nav-button:hover, .nav-button.active { border-color: #ffffff12; background: #ffffff0d; color: #fff; }
+        .task-count { margin-left: auto; color: #aaa5b4; font-size: 11px; }
+        .section-label {
+            margin: 0 8px 10px;
+            color: #85828d;
+            font-size: 11px;
+            font-weight: 650;
+            letter-spacing: .09em;
+            text-transform: uppercase;
+        }
+        .history { display: grid; gap: 3px; }
+        .history-item {
+            overflow: hidden;
+            padding: 9px 10px;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: #c8c5ce;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .history-item:hover, .history-item.active { background: #ffffff0d; color: #fff; }
+        .sidebar-spacer { flex: 1; }
+        .account {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 8px 4px;
+            border-top: 1px solid var(--line);
+        }
+        .avatar {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #35313e;
+            color: #e0d5ff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .account-name { font-size: 12px; font-weight: 600; }
+        .account-status { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+        .main { position: relative; display: flex; flex: 1; min-width: 0; flex-direction: column; }
+        .topbar {
+            height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            border-bottom: 1px solid var(--line);
+        }
+        .model-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+        .model-dot { width: 7px; height: 7px; border-radius: 50%; background: #f0b766; box-shadow: 0 0 12px #f0b76670; }
+        .assistant-status { margin-left: auto; margin-right: 18px; color: #aaa5b4; font-size: 11px; }
+        .preview-label { color: var(--muted); font-size: 11px; }
+        .connect-button {
+            padding: 7px 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #ffffff08;
+            color: #d8c9ff;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .connect-button:hover { background: #ffffff12; }
+        dialog {
+            width: min(440px, calc(100vw - 32px));
+            padding: 24px;
+            border: 1px solid #ffffff1b;
+            border-radius: 16px;
+            background: #1a191f;
+            color: #f2f0f5;
+            box-shadow: 0 24px 90px #000a;
+        }
+        dialog::backdrop { background: #050508bb; backdrop-filter: blur(4px); }
+        .dialog-heading { margin: 0 0 8px; font-size: 18px; font-weight: 650; }
+        .dialog-copy { margin: 0 0 18px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+        .dialog-copy a { color: #c4aaff; }
+        .setup-command { margin: -6px 0 16px; padding: 12px; border: 1px solid #ffffff18; border-radius: 8px; background: #101014; color: #e0d5ff; font-size: 13px; }
+        .key-input {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #ffffff20;
+            border-radius: 9px;
+            outline: none;
+            background: #101014;
+            color: #f4f1f8;
+            font-size: 13px;
+        }
+        .key-input:focus { border-color: #a98bff78; }
+        .dialog-error { min-height: 18px; margin: 9px 0 0; color: #ff9caa; font-size: 11px; }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+        .dialog-actions button { padding: 9px 13px; border: 1px solid var(--line); border-radius: 8px; background: #ffffff08; cursor: pointer; font-size: 12px; }
+        .dialog-actions .primary { border-color: transparent; background: linear-gradient(145deg, #c7a5ff, #9a7bf3); color: #191421; font-weight: 650; }
+        .workspace { display: flex; flex: 1; flex-direction: column; width: 100%; max-width: 840px; margin: 0 auto; padding: 32px 28px 22px; }
+        .conversation { display: flex; flex: 1; flex-direction: column; gap: 22px; overflow-y: auto; padding: 0 0 20px; }
+        .welcome { display: flex; flex-direction: column; align-items: center; margin: auto 0; padding: 20px 0 36px; text-align: center; }
+        .welcome-mark {
+            position: relative;
+            width: 152px;
+            height: 152px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 28px;
+            border: 1px solid #d5c2ff22;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 50% 50%, #b8a4ff18 0 34%, transparent 35%),
+                radial-gradient(circle at 50% 50%, #a78bfa0e 0 54%, transparent 55%);
+            box-shadow: 0 0 60px #9472ff12, inset 0 0 35px #a78bfa0c;
+            transition: box-shadow .3s, transform .3s;
+        }
+        .welcome-mark::before, .welcome-mark::after {
+            position: absolute;
+            inset: 12px;
+            border: 1px solid #c8a8ff25;
+            border-radius: 50%;
+            content: "";
+            animation: orbit 9s linear infinite;
+        }
+        .welcome-mark::after {
+            inset: 25px;
+            border-color: #8bd7ff25;
+            animation-direction: reverse;
+            animation-duration: 13s;
+        }
+        .orb-core {
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 27%, #f6d6ff, #c99bff 34%, #8d80ff 68%, #66c9e9);
+            box-shadow: 0 0 24px #bb8cff70, 0 0 58px #9975ff3a, inset -8px -10px 18px #5a4bb95c;
+            animation: breathe 4s ease-in-out infinite;
+        }
+        .welcome-mark.is-listening {
+            transform: scale(1.04);
+            box-shadow: 0 0 75px #a987ff42, inset 0 0 42px #c4aaff20;
+        }
+        .welcome-mark.is-listening .orb-core { animation-duration: .8s; }
+        .welcome-mark.is-thinking .orb-core { animation-duration: 1.4s; }
+        @keyframes breathe {
+            0%, 100% { transform: scale(.92); filter: saturate(.9); }
+            50% { transform: scale(1.06); filter: saturate(1.2); }
+        }
+        @keyframes orbit { to { transform: rotate(360deg); } }
+        .voice-status { min-height: 20px; margin: 0 0 8px; color: #c7b6f0; font-size: 12px; letter-spacing: .02em; }
+        .welcome h1 { font-size: clamp(30px, 4vw, 42px); }
+        .welcome p { max-width: 420px; margin: 10px 0 24px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+        .voice-hint { display: grid; gap: 6px; max-width: 440px; margin-top: 18px; color: #85818e; font-size: 11px; line-height: 1.5; }
+        .voice-hint strong { color: #c9c5d0; font-weight: 600; }
+        .voice-hint kbd { padding: 3px 6px; border: 1px solid #ffffff1c; border-radius: 5px; background: #ffffff08; color: #c9c5d0; font: inherit; }
+        .welcome .suggestions { justify-content: center; }
+        .welcome .suggestion { min-height: 60px; }
+        .voice-button {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #ffffff12;
+            border-radius: 11px;
+            background: #ffffff08;
+            color: #d4c4f8;
+            cursor: pointer;
+            transition: color .18s, background .18s, border-color .18s;
+        }
+        .voice-button:hover, .voice-button.is-listening { border-color: #b395ff70; background: #a98bff1b; color: #e3d7ff; }
+        .voice-button:disabled { opacity: .45; cursor: default; }
+        .voice-button:focus-visible, .send:focus-visible { outline: 2px solid #c5a9ff; outline-offset: 3px; }
+        .composer { align-items: center; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+        }
+        h1 { margin: 0; font-size: clamp(29px, 4vw, 40px); font-weight: 620; letter-spacing: -1.7px; }
+        .suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 650px; }
+        .suggestion {
+            min-height: 76px;
+            padding: 14px 15px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #ffffff05;
+            cursor: pointer;
+            text-align: left;
+            transition: background .18s, border-color .18s, transform .18s;
+        }
+        .suggestion:hover { transform: translateY(-1px); border-color: #a98bff60; background: #a98bff0d; }
+        .suggestion strong { display: block; margin-bottom: 5px; font-size: 12px; font-weight: 620; }
+        .suggestion span { color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+        .message { display: flex; gap: 12px; max-width: 100%; animation: appear .2s ease-out; }
+        @keyframes appear { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .message .avatar { flex: 0 0 30px; }
+        .message.user { align-self: flex-end; max-width: 84%; padding: 12px 15px; border: 1px solid #ffffff10; border-radius: 15px 15px 4px 15px; background: #24232b; color: #f3f1f7; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .message.assistant { align-self: flex-start; align-items: flex-start; }
+        .message.assistant .avatar { background: linear-gradient(145deg, #e2b5ff, #9f85ff); color: #17131f; }
+        .message-copy { padding-top: 2px; color: #d2cfd8; font-size: 13px; line-height: 1.7; }
+        .message-copy strong { color: #f4efff; }
+        .message-copy.pending { color: var(--muted); font-style: italic; }
+        .typing-indicator { display: inline-flex; align-items: center; gap: 4px; margin-left: 5px; vertical-align: middle; }
+        .typing-indicator span { width: 5px; height: 5px; border-radius: 50%; background: #c7b6f0; animation: typing-bounce 1s ease-in-out infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay: .14s; }
+        .typing-indicator span:nth-child(3) { animation-delay: .28s; }
+        @keyframes typing-bounce {
+            0%, 60%, 100% { opacity: .45; transform: translateY(0); }
+            30% { opacity: 1; transform: translateY(-4px); }
+        }
+        .composer-wrap { padding-top: 8px; }
+        .composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 12px 12px 12px 17px;
+            border: 1px solid #ffffff20;
+            border-radius: 16px;
+            background: #1b1a20;
+            box-shadow: 0 12px 45px #00000025;
+            transition: border-color .2s;
+        }
+        .composer:focus-within { border-color: #a98bff78; }
+        textarea {
+            flex: 1;
+            min-height: 25px;
+            max-height: 140px;
+            resize: none;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: #f4f1f8;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        textarea::placeholder { color: #85818e; }
+        .send {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 34px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #c7a5ff, #9a7bf3);
+            color: #191421;
+            cursor: pointer;
+            transition: filter .18s, opacity .18s;
+        }
+        .send:hover { filter: brightness(1.13); }
+        .send:disabled { opacity: .45; cursor: default; }
+        .disclaimer { margin: 10px 0 0; color: #77747f; font-size: 10px; text-align: center; }
+        .voice-command-hint { margin: 8px 0 0; color: #88838f; font-size: 10px; line-height: 1.5; text-align: center; }
+        .voice-command-hint kbd { color: #c9c5d0; font: inherit; }
+        .tasks-view { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+        .tasks-view[hidden], .conversation[hidden] { display: none; }
+        .tasks-heading { margin: 14px 0 7px; }
+        .tasks-description { margin: 0 0 24px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .task-form { display: flex; gap: 9px; margin-bottom: 25px; }
+        .task-title-input, .task-date-input {
+            min-width: 0;
+            padding: 11px 12px;
+            border: 1px solid #ffffff20;
+            border-radius: 10px;
+            outline: none;
+            background: #1b1a20;
+            color: #f4f1f8;
+            font: inherit;
+            font-size: 12px;
+        }
+        .task-title-input { flex: 1; }
+        .task-date-input { color: #aaa5b4; color-scheme: dark; }
+        .task-title-input:focus, .task-date-input:focus { border-color: #a98bff78; }
+        .task-add {
+            padding: 0 16px;
+            border: 0;
+            border-radius: 10px;
+            background: linear-gradient(145deg, #c7a5ff, #9a7bf3);
+            color: #191421;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 650;
+        }
+        .task-add:disabled { opacity: .5; cursor: default; }
+        .task-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .task-summary { color: #aaa5b4; font-size: 12px; }
+        .task-filters { display: flex; gap: 5px; }
+        .task-filter {
+            padding: 6px 9px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: transparent;
+            color: #aaa5b4;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .task-filter:hover, .task-filter.active { border-color: #ffffff12; background: #ffffff0b; color: #e7ddff; }
+        .task-list { display: grid; align-content: start; gap: 8px; overflow: auto; padding: 1px 2px 16px 0; }
+        .task-item { display: flex; align-items: center; gap: 12px; padding: 14px 13px; border: 1px solid var(--line); border-radius: 11px; background: #ffffff04; }
+        .task-check { width: 17px; height: 17px; flex: 0 0 17px; margin: 0; accent-color: #a98bff; cursor: pointer; }
+        .task-copy { min-width: 0; flex: 1; }
+        .task-name { overflow-wrap: anywhere; color: #ece9f1; font-size: 13px; line-height: 1.5; }
+        .task-item.completed .task-name { color: #77747f; text-decoration: line-through; }
+        .task-due { margin-top: 3px; color: #9286af; font-size: 10px; }
+        .task-delete {
+            width: 30px;
+            height: 30px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #8f8998;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .task-delete:hover { background: #ff668115; color: #ff9caa; }
+        .task-empty { padding: 36px 15px; color: #8b8792; font-size: 12px; text-align: center; }
+        .task-notice { min-height: 18px; margin: 0 0 8px; color: #ff9caa; font-size: 11px; }
+        .websites-view { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+        .websites-view[hidden] { display: none; }
+        .websites-heading { margin: 14px 0 7px; }
+        .websites-description { margin: 0 0 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .website-search {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 11px 13px;
+            border: 1px solid #ffffff20;
+            border-radius: 10px;
+            outline: none;
+            background: #1b1a20;
+            color: #f4f1f8;
+            font: inherit;
+            font-size: 12px;
+        }
+        .website-search:focus { border-color: #a98bff78; }
+        .website-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); align-content: start; gap: 11px; overflow-y: auto; padding: 1px 2px 16px 0; }
+        .website-card {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #ffffff05;
+            color: inherit;
+            text-decoration: none;
+            transition: background .18s, border-color .18s, transform .18s;
+        }
+        .website-card:hover { transform: translateY(-1px); border-color: #a98bff60; background: #a98bff0d; }
+        .website-icon {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid #ffffff12;
+            border-radius: 11px;
+            background: #ffffff0a;
+            color: #d8c9ff;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .website-copy { min-width: 0; flex: 1; }
+        .website-name { color: #ece9f1; font-size: 13px; font-weight: 600; }
+        .website-url { overflow: hidden; margin-top: 4px; color: #9996a2; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+        .website-open { color: #aaa5b4; font-size: 15px; }
+        .website-empty { grid-column: 1 / -1; padding: 28px 15px; color: #8b8792; font-size: 12px; text-align: center; }
+
+        @media (max-width: 700px) {
+            .sidebar { width: 60px; flex-basis: 60px; align-items: center; padding: 18px 8px 12px; }
+            .brand { padding: 0; }
+            .brand-copy, .new-chat span, .nav-button span:nth-child(2), .task-count, .section-label, .history, .account-copy { display: none; }
+            .new-chat { width: 40px; height: 40px; margin: 25px 0; padding: 0; font-size: 20px; }
+            .nav-button { justify-content: center; width: 40px; margin: 0 0 20px; padding: 11px 0; font-size: 18px; }
+            .account { justify-content: center; width: 100%; padding: 13px 0 0; }
+            .topbar { height: 58px; padding: 0 16px; }
+            .workspace { padding: 30px 17px 17px; }
+            .welcome { padding-bottom: 25px; }
+            .welcome-mark { width: 128px; height: 128px; }
+            .orb-core { width: 64px; height: 64px; }
+            .suggestions { grid-template-columns: 1fr; }
+            .suggestion { min-height: 65px; }
+            .preview-label { font-size: 10px; }
+            .task-form { flex-wrap: wrap; }
+            .task-title-input { flex-basis: 100%; }
+            .task-date-input { flex: 1; }
+            .task-add { min-height: 39px; }
+        }
+    </style>
 </head>
-
 <body>
-
-    <div class="container">
-
-        <div class="top">
-            <h1 id="title">
-                <i class="logo"></i>
-                <span>Maya</span>
-            </h1>
-            <ul class="list-button">
-                <li class="list-button-item search"></li>
-                <li class="list-button-item menu"></li>
-                <li class="list-button-item mini"></li>
-                <li class="list-button-item close"></li>
-            </ul>
-        </div>
-
-        <div class="left">
-            <ul class="list-tab">
-                <!-- <li class="list-tab-item">name</li> -->
-            </ul>
-        </div>
-
-        <div class="right">
-            <div class="list-icon">
-                <!-- <div class="list-icon-item"><i></i><p>name</p></div> -->
-            </div>
-        </div>
-
-        <div class="search">
-            <div class="searchWarp">
-                <input class="searchInput">
-            </div>
-            <div class="searchListWarp">
-                <div class="list-icon type-list">
-                    <!-- <div class="list-icon-item"><i></i><p>name</p></div> -->
+    <div class="app">
+        <aside class="sidebar" aria-label="Chat navigation">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">M</div>
+                <div class="brand-copy">
+                    <div class="brand-name">Maya</div>
+                    <div class="brand-label">your AI companion</div>
                 </div>
             </div>
-        </div>
+            <button class="new-chat" id="newChat" type="button" aria-label="Start a new chat">
+                <span aria-hidden="true">＋</span><span>New chat</span>
+            </button>
+            <button class="nav-button" id="tasksNav" type="button" aria-label="Open tasks">
+                <span aria-hidden="true">☑</span><span>Tasks</span><span class="task-count" id="sidebarTaskCount">0</span>
+            </button>
+            <button class="nav-button" id="websitesNav" type="button" aria-label="Open websites">
+                <span aria-hidden="true">↗</span><span>Websites</span>
+            </button>
+            <p class="section-label">Recent</p>
+            <nav class="history" id="history" aria-label="Recent chats"></nav>
+            <div class="sidebar-spacer"></div>
+            <div class="account">
+                <div class="avatar" aria-hidden="true">M</div>
+                <div class="account-copy">
+                    <div class="account-name">Maya</div>
+                    <div class="account-status">Personal workspace</div>
+                </div>
+            </div>
+        </aside>
 
+        <main class="main">
+            <header class="topbar">
+                <div class="model-name"><span class="model-dot" aria-hidden="true"></span>Maya assistant</div>
+                <span class="assistant-status voice-status" id="voiceStatus" role="status" aria-live="polite">Ready when you are</span>
+                <button class="connect-button" id="connectButton" type="button">Set up free AI</button>
+            </header>
+            <section class="workspace" aria-label="Maya AI chat">
+                <section class="tasks-view" id="tasksView" aria-label="Task manager" hidden>
+                    <h1 class="tasks-heading">Your tasks</h1>
+                    <p class="tasks-description">Tell Maya what you need to do, or add and organize tasks here. Your list stays in this browser.</p>
+                    <form class="task-form" id="taskForm">
+                        <input class="task-title-input" id="taskTitle" maxlength="240" placeholder="What do you need to do?" aria-label="Task name" required>
+                        <input class="task-date-input" id="taskDue" type="date" aria-label="Task due date">
+                        <button class="task-add" type="submit">Add task</button>
+                    </form>
+                    <p class="task-notice" id="taskNotice" role="status" aria-live="polite"></p>
+                    <div class="task-toolbar">
+                        <span class="task-summary" id="taskSummary"></span>
+                        <div class="task-filters" role="group" aria-label="Filter tasks">
+                            <button class="task-filter active" type="button" data-filter="open">Open</button>
+                            <button class="task-filter" type="button" data-filter="all">All</button>
+                            <button class="task-filter" type="button" data-filter="completed">Done</button>
+                        </div>
+                    </div>
+                    <div class="task-list" id="taskList"></div>
+                </section>
+                <section class="websites-view" id="websitesView" aria-label="Quick access websites" hidden>
+                    <h1 class="websites-heading">Websites</h1>
+                    <p class="websites-description">Your favorite websites, ready to open in a new tab.</p>
+                    <input class="website-search" id="websiteSearch" type="search" placeholder="Search websites..." aria-label="Search websites">
+                    <div class="website-grid" id="websiteGrid"></div>
+                </section>
+                <div class="conversation" id="conversation" aria-live="polite">
+                    <div class="welcome" id="welcome">
+                        <div class="welcome-mark" id="voiceOrb" aria-hidden="true"><span class="orb-core"></span></div>
+                        <h1>Hi, I’m Maya.</h1>
+                        <p>Your voice-first AI companion. Ask me anything, or tap the microphone and say a command.</p>
+                        <div class="suggestions">
+                            <button class="suggestion" type="button" data-prompt="Help me plan a focused and productive day">
+                                <strong>Plan my day</strong><span>Make a simple schedule that feels achievable</span>
+                            </button>
+                            <button class="suggestion" type="button" data-prompt="Add finish my most important task to my tasks">
+                                <strong>Add a task</strong><span>Keep track of something you need to get done</span>
+                            </button>
+                            <button class="suggestion" type="button" data-prompt="Help me write a clear, friendly email">
+                                <strong>Write something</strong><span>Get a first draft started in the right tone</span>
+                            </button>
+                            <button class="suggestion" type="button" data-prompt="Explain a difficult idea in simple terms">
+                                <strong>Learn a new idea</strong><span>Break a tricky topic into easier pieces</span>
+                            </button>
+                            <button class="suggestion" type="button" data-prompt="Give me a few creative ideas for my next project">
+                                <strong>Explore ideas</strong><span>Find a fresh starting point for a project</span>
+                            </button>
+                        </div>
+                        <div class="voice-hint">
+                            <strong>Tap the microphone, then try:</strong>
+                            <span><kbd>“Maya, add a task to call Sam tomorrow.”</kbd></span>
+                            <span><kbd>“What are my tasks?”</kbd> · <kbd>“Mark call Sam done.”</kbd></span>
+                            <span><kbd>“Open Google.”</kbd> · <kbd>“Go to TCS Careers.”</kbd> · <kbd>“Launch YouTube.”</kbd></span>
+                            <span>Open any shortcut by name, such as Gmail, WhatsApp, Google Maps, Amazon, Netflix, LinkedIn, or Naukri. Voice opens it in this tab; use Websites to open it in a new tab.</span>
+                            <span><kbd>“Go back to chat.”</kbd> · <kbd>“What voice commands can I use?”</kbd></span>
+                            <span>Voice works while Maya is open; it does not listen for a wake word in the background.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="composer-wrap">
+                    <form class="composer" id="chatForm">
+                        <textarea id="prompt" rows="1" aria-label="Message Maya" placeholder="Message Maya..."></textarea>
+                        <button class="voice-button" id="voiceButton" type="button" aria-label="Start voice command" title="Tap to speak a command">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <button class="send" id="send" type="submit" aria-label="Send message" disabled>
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 19V5m0 0 6 6m-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </form>
+                    <p class="voice-command-hint">Tap the microphone to speak · try <kbd>“Open Websites”</kbd>, <kbd>“Open Gmail”</kbd>, <kbd>“Go to Google Maps”</kbd>, or <kbd>“Open WhatsApp”</kbd></p>
+                    <p class="disclaimer">Maya can run on Ollama or a hosted AI provider.</p>
+                </div>
+            </section>
+        </main>
     </div>
+    <dialog id="settingsDialog" aria-labelledby="dialogTitle">
+        <form id="providerForm">
+            <h2 class="dialog-heading" id="dialogTitle">Set up AI</h2>
+            <p class="dialog-copy">Maya can use Ollama on this computer or a hosted AI API for a public deployment. For local use, install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama</a>, start it, then run this command in Terminal:</p>
+            <p class="setup-command"><code>ollama pull llama3.2:3b</code></p>
+            <p class="dialog-copy">For hosted deployments, set OPENAI_API_KEY and OPENAI_BASE_URL in the server environment before launching Maya.</p>
+            <p class="dialog-error" id="configError" role="alert"></p>
+            <div class="dialog-actions">
+                <button id="cancelConnect" type="button">Cancel</button>
+                <button class="primary" id="saveConnect" type="submit">Check connection</button>
+            </div>
+        </form>
+    </dialog>
+    <script>
+        const conversation = document.getElementById('conversation');
+        const welcome = document.getElementById('welcome');
+        const form = document.getElementById('chatForm');
+        const input = document.getElementById('prompt');
+        const sendButton = document.getElementById('send');
+        const history = document.getElementById('history');
+        const connectButton = document.getElementById('connectButton');
+        const brandMark = document.querySelector('.brand-mark');
+        const voiceButton = document.getElementById('voiceButton');
+        const voiceOrb = document.getElementById('voiceOrb');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const settingsDialog = document.getElementById('settingsDialog');
+        const configError = document.getElementById('configError');
+        const tasksView = document.getElementById('tasksView');
+        const tasksNav = document.getElementById('tasksNav');
+        const websitesView = document.getElementById('websitesView');
+        const websitesNav = document.getElementById('websitesNav');
+        const websiteSearch = document.getElementById('websiteSearch');
+        const websiteGrid = document.getElementById('websiteGrid');
+        const taskList = document.getElementById('taskList');
+        const taskSummary = document.getElementById('taskSummary');
+        const taskNotice = document.getElementById('taskNotice');
+        const taskTitleInput = document.getElementById('taskTitle');
+        const taskDueInput = document.getElementById('taskDue');
+        const sidebarTaskCount = document.getElementById('sidebarTaskCount');
+        const taskStorageKey = 'maya.tasks.v1';
+        let taskFilter = 'open';
+        let tasks = [];
+        const websites = [
+            { name: 'Google', url: 'https://www.google.com/', icon: 'G' },
+            { name: 'Yahoo!', url: 'https://www.yahoo.com/', icon: 'Y!' },
+            { name: 'Gmail', url: 'https://mail.google.com/', icon: 'M' },
+            { name: 'Outlook', url: 'https://outlook.live.com/', icon: 'O' },
+            { name: 'Instagram', url: 'https://www.instagram.com/', icon: 'IG' },
+            { name: 'Facebook', url: 'https://www.facebook.com/', icon: 'f' },
+            { name: 'WhatsApp', url: 'https://web.whatsapp.com/', icon: 'W' },
+            { name: 'X', url: 'https://x.com/', icon: 'X' },
+            { name: 'ChatGPT', url: 'https://chatgpt.com/', icon: 'AI' },
+            { name: 'YouTube', url: 'https://www.youtube.com/', icon: '▶' },
+            { name: 'Google Maps', url: 'https://maps.google.com/', icon: 'Map' },
+            { name: 'Google Drive', url: 'https://drive.google.com/', icon: 'D' },
+            { name: 'Google Docs', url: 'https://docs.google.com/', icon: 'Doc' },
+            { name: 'Google Calendar', url: 'https://calendar.google.com/', icon: 'Cal' },
+            { name: 'Microsoft 365', url: 'https://www.microsoft365.com/', icon: '365' },
+            { name: 'Zoom', url: 'https://zoom.us/', icon: 'Z' },
+            { name: 'Slack', url: 'https://slack.com/', icon: 'S' },
+            { name: 'Discord', url: 'https://discord.com/', icon: 'D' },
+            { name: 'Telegram', url: 'https://web.telegram.org/', icon: 'T' },
+            { name: 'Notion', url: 'https://www.notion.so/', icon: 'N' },
+            { name: 'Trello', url: 'https://trello.com/', icon: 'T' },
+            { name: 'Dropbox', url: 'https://www.dropbox.com/', icon: 'D' },
+            { name: 'Canva', url: 'https://www.canva.com/', icon: 'C' },
+            { name: 'Wikipedia', url: 'https://www.wikipedia.org/', icon: 'W' },
+            { name: 'GitHub', url: 'https://github.com/', icon: 'GH' },
+            { name: 'Reddit', url: 'https://www.reddit.com/', icon: 'R' },
+            { name: 'PayPal', url: 'https://www.paypal.com/', icon: 'P' },
+            { name: 'PhonePe', url: 'https://www.phonepe.com/', icon: 'P' },
+            { name: 'Paytm', url: 'https://paytm.com/', icon: 'P' },
+            { name: 'Amazon India', url: 'https://www.amazon.in/', icon: 'a' },
+            { name: 'Flipkart', url: 'https://www.flipkart.com/', icon: 'F' },
+            { name: 'Myntra', url: 'https://www.myntra.com/', icon: 'M' },
+            { name: 'Swiggy', url: 'https://www.swiggy.com/', icon: 'S' },
+            { name: 'Zomato', url: 'https://www.zomato.com/', icon: 'Z' },
+            { name: 'Spotify', url: 'https://open.spotify.com/', icon: 'S' },
+            { name: 'Netflix', url: 'https://www.netflix.com/', icon: 'N' },
+            { name: 'Prime Video', url: 'https://www.primevideo.com/', icon: 'P' },
+            { name: 'Uber', url: 'https://www.uber.com/', icon: 'U' },
+            { name: 'MakeMyTrip', url: 'https://www.makemytrip.com/', icon: 'MMT' },
+            { name: 'Booking.com', url: 'https://www.booking.com/', icon: 'B' },
+            { name: 'Coursera', url: 'https://www.coursera.org/', icon: 'Co' },
+            { name: 'Duolingo', url: 'https://www.duolingo.com/', icon: 'Du' },
+            { name: 'TCS Careers', url: 'https://careers.tcs.com/', icon: 'TCS' },
+            { name: 'Lloyd India', url: 'https://lloyd.in/', icon: 'L' },
+            { name: 'LinkedIn', url: 'https://www.linkedin.com/', icon: 'in' },
+            { name: 'Naukri', url: 'https://www.naukri.com/', icon: 'N' },
+            { name: 'Apna', url: 'https://apna.co/', icon: 'A' },
+            { name: 'IRCTC', url: 'https://www.irctc.co.in/', icon: 'IR' }
+        ];
+        let sending = false;
+        let currentConversation = null;
+        let recognition = null;
+        let listening = false;
 
+        function loadTasks() {
+            try {
+                const saved = localStorage.getItem(taskStorageKey);
+                if (saved === null) return;
+                const parsed = JSON.parse(saved);
+                if (!Array.isArray(parsed)) throw new Error('Saved task list has an invalid format.');
+                tasks = parsed.filter(task =>
+                    task && typeof task.id === 'string' && typeof task.title === 'string' &&
+                    typeof task.completed === 'boolean' && (task.dueDate === null || typeof task.dueDate === 'string')
+                );
+                if (tasks.length !== parsed.length) taskNotice.textContent = 'Some saved tasks were invalid and could not be shown.';
+            } catch (error) {
+                taskNotice.textContent = `Could not load saved tasks: ${error.message}`;
+            }
+        }
+
+        function saveTasks() {
+            try {
+                localStorage.setItem(taskStorageKey, JSON.stringify(tasks));
+                taskNotice.textContent = '';
+                return true;
+            } catch (error) {
+                taskNotice.textContent = `Could not save your tasks: ${error.message}`;
+                return false;
+            }
+        }
+
+        function renderWebsites(query = '') {
+            const term = query.trim().toLocaleLowerCase();
+            const matchingSites = websites.filter(site => `${site.name} ${site.url}`.toLocaleLowerCase().includes(term));
+            websiteGrid.replaceChildren();
+            if (matchingSites.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'website-empty';
+                empty.textContent = 'No matching websites.';
+                websiteGrid.append(empty);
+                return;
+            }
+            for (const site of matchingSites) {
+                const card = document.createElement('a');
+                card.className = 'website-card';
+                card.href = site.url;
+                card.target = '_blank';
+                card.rel = 'noopener noreferrer';
+                card.setAttribute('aria-label', `Open ${site.name} in a new tab`);
+                const icon = document.createElement('span');
+                icon.className = 'website-icon';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = site.icon;
+                const copy = document.createElement('span');
+                copy.className = 'website-copy';
+                const name = document.createElement('span');
+                name.className = 'website-name';
+                name.textContent = site.name;
+                const url = document.createElement('span');
+                url.className = 'website-url';
+                url.textContent = site.url.replace(/^https:\/\//, '').replace(/\/$/, '');
+                copy.append(name, url);
+                const open = document.createElement('span');
+                open.className = 'website-open';
+                open.setAttribute('aria-hidden', 'true');
+                open.textContent = '↗';
+                card.append(icon, copy, open);
+                websiteGrid.append(card);
+            }
+        }
+
+        function renderTasks() {
+            const openCount = tasks.filter(task => !task.completed).length;
+            sidebarTaskCount.textContent = String(openCount);
+            taskSummary.textContent = `${openCount} open · ${tasks.length - openCount} completed`;
+            taskList.replaceChildren();
+            const visibleTasks = tasks
+                .filter(task => taskFilter === 'all' || (taskFilter === 'open' ? !task.completed : task.completed))
+                .slice()
+                .sort((left, right) => Number(left.completed) - Number(right.completed) || left.title.localeCompare(right.title));
+            if (visibleTasks.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'task-empty';
+                empty.textContent = taskFilter === 'open' ? 'Nothing on your list yet. Add a task or tell Maya what to remember.' :
+                    taskFilter === 'completed' ? 'No completed tasks yet.' : 'Your task list is empty.';
+                taskList.append(empty);
+                return;
+            }
+            for (const task of visibleTasks) {
+                const row = document.createElement('div');
+                row.className = `task-item${task.completed ? ' completed' : ''}`;
+                const checkbox = document.createElement('input');
+                checkbox.className = 'task-check';
+                checkbox.type = 'checkbox';
+                checkbox.checked = task.completed;
+                checkbox.setAttribute('aria-label', `${task.completed ? 'Reopen' : 'Complete'} ${task.title}`);
+                checkbox.dataset.taskAction = 'toggle';
+                checkbox.dataset.taskId = task.id;
+                const copy = document.createElement('div');
+                copy.className = 'task-copy';
+                const title = document.createElement('div');
+                title.className = 'task-name';
+                title.textContent = task.title;
+                copy.append(title);
+                if (task.dueDate) {
+                    const due = document.createElement('div');
+                    due.className = 'task-due';
+                    due.textContent = `Due ${new Date(`${task.dueDate}T00:00:00`).toLocaleDateString(undefined, { dateStyle: 'medium' })}`;
+                    copy.append(due);
+                }
+                const remove = document.createElement('button');
+                remove.className = 'task-delete';
+                remove.type = 'button';
+                remove.textContent = '×';
+                remove.title = `Delete ${task.title}`;
+                remove.setAttribute('aria-label', `Delete ${task.title}`);
+                remove.dataset.taskAction = 'delete';
+                remove.dataset.taskId = task.id;
+                row.append(checkbox, copy, remove);
+                taskList.append(row);
+            }
+        }
+
+        function addTask(title, dueDate = null) {
+            const cleanedTitle = title.trim().replace(/[.!?]+$/, '');
+            if (!cleanedTitle) return false;
+            tasks.push({ id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`, title: cleanedTitle, dueDate, completed: false });
+            const saved = saveTasks();
+            renderTasks();
+            return saved;
+        }
+
+        function findMatchingTask(query) {
+            const cleaned = query.trim().replace(/[.!?]+$/, '').toLocaleLowerCase();
+            const openTasks = tasks.filter(task => !task.completed);
+            const exact = openTasks.filter(task => task.title.toLocaleLowerCase() === cleaned);
+            if (exact.length) return exact;
+            return openTasks.filter(task => task.title.toLocaleLowerCase().includes(cleaned));
+        }
+
+        function normalizeCommandText(message) {
+            return message.trim().replace(/[.!?]+$/, '').replace(/^(?:(?:hey|okay|ok)\s+)?maya[\s,:-]+/i, '').trim();
+        }
+
+        function handleAssistantCommand(message) {
+            const text = normalizeCommandText(message);
+            if (/^(?:open|show|go to)\s+(?:my\s+)?websites$/i.test(text)) {
+                showWebsitesView();
+                return 'Here are your website shortcuts. Search for a site or say its name to open it.';
+            }
+            const websiteCommand = text.match(/^(?:please\s+)?(?:open|go to|launch|visit|navigate to|take me to)\s+(.+?)(?:\s+(?:website|site))?$/i);
+            if (websiteCommand) {
+                const requestedSite = websiteCommand[1].trim().toLocaleLowerCase().replace(/[.!?]+$/, '');
+                const aliases = {
+                    'chat gpt': 'ChatGPT',
+                    chatgpt: 'ChatGPT',
+                    tcs: 'TCS Careers',
+                    'tcs careers': 'TCS Careers',
+                    'tata consultancy services': 'TCS Careers',
+                    lloyd: 'Lloyd India',
+                    'lloyd india': 'Lloyd India',
+                    yahoo: 'Yahoo!',
+                    'yahoo!': 'Yahoo!',
+                    linkedin: 'LinkedIn',
+                    naukri: 'Naukri',
+                    apna: 'Apna',
+                    maps: 'Google Maps',
+                    'google maps': 'Google Maps',
+                    drive: 'Google Drive',
+                    'google drive': 'Google Drive',
+                    docs: 'Google Docs',
+                    'google docs': 'Google Docs',
+                    calendar: 'Google Calendar',
+                    'google calendar': 'Google Calendar',
+                    amazon: 'Amazon India',
+                    'amazon india': 'Amazon India',
+                    'prime': 'Prime Video',
+                    'prime video': 'Prime Video',
+                    'microsoft': 'Microsoft 365',
+                    'office 365': 'Microsoft 365',
+                    'train booking': 'IRCTC',
+                    irctc: 'IRCTC'
+                };
+                const requestedName = (aliases[requestedSite] || requestedSite).toLocaleLowerCase();
+                const site = websites.find(item => item.name.toLocaleLowerCase() === requestedName);
+                if (!site) {
+                    return `I don’t have “${websiteCommand[1].trim()}” in your website shortcuts yet. Open Websites and search for a shortcut, or say “What voice commands can I use?”`;
+                }
+                window.location.assign(site.url);
+                return `Opening ${site.name} in this tab.`;
+            }
+            if (/^(?:go back to|return to|switch to|open|show)\s+(?:the\s+)?(?:chat|assistant)$/i.test(text)) {
+                showAssistantView();
+                return 'You’re back in chat. What would you like to do?';
+            }
+            if (/^(?:what\s+)?(?:voice\s+)?commands(?:\s+(?:can i|can you) (?:use|say))?$|^(?:what can you do|help|show me what you can do)$/i.test(text)) {
+                return 'I can answer questions, manage tasks, and open any website shortcut by name. Try “Open Gmail,” “Open WhatsApp,” “Go to Google Maps,” “Open Amazon,” “Launch Netflix,” “Open LinkedIn,” or “Open IRCTC.” Say “Open Websites” to browse or search all shortcuts.';
+            }
+            return null;
+        }
+
+        function handleTaskCommand(message) {
+            const text = normalizeCommandText(message);
+            const addMatch = text.match(/^(?:please\s+)?(?:remind me to|remember to)\s+(.+)$/i) ||
+                text.match(/^(?:please\s+)?(?:add|create|make)\s+(?:(?:a|another)\s+)?(?:task|reminder)\s+(?:to\s+)?(.+)$/i) ||
+                text.match(/^(?:please\s+)?(?:add|create)\s+(.+?)(?:\s+to my (?:tasks|task list|todo list))?$/i);
+            if (addMatch) {
+                let title = addMatch[1].trim().replace(/\s+to my (?:tasks|task list|todo list)$/i, '');
+                const relativeDue = title.match(/\s+(?:(?:by|due|on)\s+)?(today|tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)$/i);
+                let dueDate = null;
+                if (relativeDue) {
+                    const date = new Date();
+                    const day = relativeDue[1].toLowerCase();
+                    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                    if (day === 'tomorrow') {
+                        date.setDate(date.getDate() + 1);
+                    } else if (weekdays.includes(day)) {
+                        const daysAhead = (weekdays.indexOf(day) - date.getDay() + 7) % 7 || 7;
+                        date.setDate(date.getDate() + daysAhead);
+                    }
+                    dueDate = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+                    title = title.slice(0, relativeDue.index).trim();
+                }
+                if (addTask(title, dueDate)) {
+                    return `Added “${title}” to your tasks${dueDate ? `, due ${new Date(`${dueDate}T00:00:00`).toLocaleDateString()}` : ''}.`;
+                }
+                return 'I couldn’t save that task. Please try again.';
+            }
+
+            if (/^(?:(?:please\s+)?(?:show|list|read|check|open)\s+(?:(?:me|out)\s+)?(?:my\s+)?(?:tasks|to[- ]?dos|task list|list)(?:\s+today)?|what(?:'s| is)\s+(?:on my list|on my tasks|due today|next)|whats\s+(?:on my list|next)|what do i have to do(?:\s+today)?|what do i need to do(?:\s+today)?|what are my tasks(?:\s+today)?)$/i.test(text)) {
+                showTasksView();
+                const todayOnly = /\b(?:today|due today)\b/i.test(text);
+                const today = new Date();
+                const todayKey = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-');
+                const openTasks = tasks.filter(task => !task.completed && (!todayOnly || (task.dueDate && task.dueDate <= todayKey)));
+                return openTasks.length
+                    ? `You have ${openTasks.length} open task${openTasks.length === 1 ? '' : 's'}${todayOnly ? ' due today or overdue' : ''}: ${openTasks.map(task => task.title).join('; ')}.`
+                    : todayOnly ? 'You have no open tasks due today or overdue.' : 'You have no open tasks. Enjoy the breathing room!';
+            }
+
+            const completeMatch = text.match(/^(?:please\s+)?(?:complete|finish|done with|i finished|i've finished|i completed)\s+(?:(?:my|the)\s+)?(?:task\s+)?(.+?)(?:\s+(?:as\s+)?(?:done|complete|completed))?$/i) ||
+                text.match(/^(?:please\s+)?(?:mark|set)\s+(?:(?:my|the)\s+)?(?:task\s+)?(.+?)\s+(?:as\s+)?(?:done|complete|completed)$/i);
+            if (completeMatch) {
+                const matches = findMatchingTask(completeMatch[1]);
+                if (matches.length === 1) {
+                    matches[0].completed = true;
+                    saveTasks();
+                    renderTasks();
+                    return `Done — I marked “${matches[0].title}” complete.`;
+                }
+                if (matches.length > 1) return `I found a few matching tasks: ${matches.map(task => task.title).join('; ')}. Which one did you mean?`;
+                return `I couldn’t find an open task matching “${completeMatch[1]}”.`;
+            }
+
+            const deleteMatch = text.match(/^(?:please\s+)?(?:delete|remove|cancel)\s+(?:(?:my|the)\s+)?(?:task\s+)?(.+)$/i);
+            if (deleteMatch) {
+                const matches = findMatchingTask(deleteMatch[1]);
+                if (matches.length === 1) {
+                    tasks = tasks.filter(task => task.id !== matches[0].id);
+                    saveTasks();
+                    renderTasks();
+                    return `Removed “${matches[0].title}” from your tasks.`;
+                }
+                if (matches.length > 1) return `I found a few matching tasks: ${matches.map(task => task.title).join('; ')}. Which one should I remove?`;
+                return `I couldn’t find an open task matching “${deleteMatch[1]}”.`;
+            }
+            return null;
+        }
+
+        function showTasksView() {
+            tasksView.hidden = false;
+            websitesView.hidden = true;
+            conversation.hidden = true;
+            tasksNav.classList.add('active');
+            websitesNav.classList.remove('active');
+            renderTasks();
+        }
+
+        function showWebsitesView() {
+            tasksView.hidden = true;
+            websitesView.hidden = false;
+            conversation.hidden = true;
+            tasksNav.classList.remove('active');
+            websitesNav.classList.add('active');
+            renderWebsites(websiteSearch.value);
+            websiteSearch.focus();
+        }
+
+        function showAssistantView() {
+            tasksView.hidden = true;
+            websitesView.hidden = true;
+            conversation.hidden = false;
+            tasksNav.classList.remove('active');
+            websitesNav.classList.remove('active');
+        }
+
+        function setVoiceStatus(message, state = '') {
+            voiceStatus.textContent = message;
+            brandMark.classList.toggle('is-waking', state === 'waking');
+            brandMark.classList.toggle('is-listening', state === 'listening');
+            brandMark.classList.toggle('is-thinking', state === 'thinking');
+            brandMark.classList.toggle('is-speaking', state === 'speaking');
+            voiceOrb.classList.toggle('is-listening', state === 'listening');
+            voiceOrb.classList.toggle('is-thinking', state === 'thinking');
+            voiceButton.classList.toggle('is-listening', state === 'listening');
+            voiceButton.setAttribute('aria-label', state === 'listening' ? 'Stop voice command' : 'Start voice command');
+            voiceButton.title = state === 'listening' ? 'Stop listening' : 'Tap to speak a command';
+        }
+
+        function getSpeechLanguage(language = navigator.language) {
+            try {
+                return Intl.getCanonicalLocales(language || 'en-US')[0] || 'en-US';
+            } catch (error) {
+                if (!(error instanceof RangeError)) throw error;
+                return 'en-US';
+            }
+        }
+
+        function initializeSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                voiceButton.title = 'Voice commands are not supported in this browser';
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = getSpeechLanguage();
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.onstart = () => {
+                listening = true;
+                setVoiceStatus('Listening…', 'listening');
+            };
+            recognition.onresult = event => {
+                const transcript = event.results[0][0].transcript.trim();
+                if (!transcript) {
+                    setVoiceStatus('I didn’t catch that. Try again.');
+                    return;
+                }
+                input.value = transcript;
+                updateInput();
+                setVoiceStatus('Thinking…', 'thinking');
+                sendMessage(transcript, { speak: true });
+            };
+            recognition.onerror = event => {
+                const messages = {
+                    'not-allowed': 'Microphone access is blocked. Allow it in your browser settings.',
+                    'service-not-allowed': 'Speech recognition is unavailable. Check your browser permissions.',
+                    'no-speech': 'I didn’t hear anything. Tap the microphone and try again.',
+                    network: 'Speech recognition needs an internet connection.'
+                };
+                setVoiceStatus(messages[event.error] || 'Voice input stopped. Try again.');
+            };
+            recognition.onend = () => {
+                listening = false;
+                voiceButton.classList.remove('is-listening');
+                voiceButton.setAttribute('aria-label', 'Start voice command');
+                voiceButton.title = 'Tap to speak a command';
+                if (voiceStatus.textContent === 'Listening…') setVoiceStatus('Ready when you are');
+            };
+        }
+
+        function speakReply(text) {
+            if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+                setVoiceStatus('Reply ready. Voice playback isn’t supported in this browser.');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = getSpeechLanguage();
+            utterance.onstart = () => setVoiceStatus('Speaking…', 'speaking');
+            utterance.onend = () => setVoiceStatus('Ready when you are');
+            utterance.onerror = () => setVoiceStatus('Reply ready. Voice playback couldn’t start.');
+            try {
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                setVoiceStatus(`Reply ready, but speech playback failed: ${error.message}`);
+            }
+        }
+
+        function updateInput() {
+            input.style.height = 'auto';
+            input.style.height = `${Math.min(input.scrollHeight, 140)}px`;
+            sendButton.disabled = sending || !input.value.trim();
+            voiceButton.disabled = sending;
+        }
+
+        function addMessage(text, role, linkUrl = null) {
+            const message = document.createElement('div');
+            message.className = `message ${role}`;
+            if (role === 'assistant') {
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                avatar.setAttribute('aria-hidden', 'true');
+                avatar.textContent = 'M';
+                const copy = document.createElement('div');
+                copy.className = 'message-copy';
+                const strong = document.createElement('strong');
+                strong.textContent = 'Maya';
+                copy.append(strong, document.createTextNode(` ${typeof text === 'string' ? text : text.text}`));
+                if (linkUrl) {
+                    const link = document.createElement('a');
+                    link.href = linkUrl;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = 'Open website';
+                    copy.append(document.createTextNode(' '), link);
+                }
+                message.append(avatar, copy);
+            } else {
+                message.textContent = text;
+            }
+            conversation.append(message);
+            conversation.scrollTop = conversation.scrollHeight;
+            return message;
+        }
+
+        function addHistoryItem(conversationData) {
+            const item = document.createElement('button');
+            item.className = 'history-item active';
+            item.type = 'button';
+            item.textContent = conversationData.title;
+            item.title = conversationData.title;
+            history.querySelectorAll('.history-item').forEach(entry => entry.classList.remove('active'));
+            history.prepend(item);
+            item.addEventListener('click', () => openConversation(conversationData, item));
+        }
+
+        async function sendMessage(text, options = {}) {
+            const message = text.trim();
+            if (!message || sending) return;
+            welcome?.remove();
+            if (!currentConversation) {
+                currentConversation = {
+                    title: message.length > 28 ? `${message.slice(0, 28)}…` : message,
+                    messages: []
+                };
+                addHistoryItem(currentConversation);
+            }
+            const targetConversation = currentConversation;
+            targetConversation.messages.push({ role: 'user', text: message });
+            addMessage(message, 'user');
+            input.value = '';
+            sending = true;
+            updateInput();
+            const taskReply = handleTaskCommand(message);
+            const assistantReply = taskReply || handleAssistantCommand(message);
+            if (assistantReply) {
+                const replyText = typeof assistantReply === 'string' ? assistantReply : assistantReply.text;
+                targetConversation.messages.push({ role: 'assistant', text: replyText });
+                addMessage(replyText, 'assistant', typeof assistantReply === 'string' ? null : assistantReply.url);
+                sending = false;
+                updateInput();
+                setVoiceStatus('Ready when you are');
+                if (options.speak) speakReply(replyText);
+                return;
+            }
+            setVoiceStatus('Thinking…', 'thinking');
+            const pendingMessage = addMessage('Thinking…', 'assistant');
+            const pendingText = pendingMessage.querySelector('.message-copy');
+            pendingText?.classList.add('pending');
+            if (pendingText) {
+                const pendingLabel = pendingText.querySelector('strong');
+                pendingText.replaceChildren(pendingLabel, document.createTextNode(' is thinking'));
+                const typingIndicator = document.createElement('span');
+                typingIndicator.className = 'typing-indicator';
+                typingIndicator.setAttribute('aria-label', 'Maya is thinking');
+                typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+                pendingText.append(typingIndicator);
+            }
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: targetConversation.messages.map(entry => ({
+                            role: entry.role,
+                            content: entry.text
+                        }))
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || `Request failed (${response.status}).`);
+                targetConversation.messages.push({ role: 'assistant', text: result.reply });
+                pendingMessage.remove();
+                if (currentConversation === targetConversation) {
+                    addMessage(result.reply, 'assistant');
+                    if (options.speak) speakReply(result.reply);
+                    else setVoiceStatus('Ready when you are');
+                }
+            } catch (error) {
+                pendingMessage.remove();
+                if (currentConversation === targetConversation) {
+                    addMessage(`I couldn’t reply: ${error.message}`, 'assistant');
+                    setVoiceStatus('I couldn’t get a reply. Check your connection and try again.');
+                }
+            } finally {
+                sending = false;
+                updateInput();
+                input.focus();
+            }
+        }
+
+        function openConversation(conversationData, historyItem) {
+            conversation.replaceChildren();
+            currentConversation = conversationData;
+            conversationData.messages.forEach(message => addMessage(message.text, message.role));
+            history.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+            historyItem.classList.add('active');
+            showAssistantView();
+            input.focus();
+        }
+
+        function startNewChat() {
+            if (recognition && listening) recognition.stop();
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            conversation.replaceChildren();
+            conversation.append(welcome);
+            currentConversation = null;
+            history.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+            input.value = '';
+            updateInput();
+            input.focus();
+        }
+
+        async function refreshProviderStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const status = await response.json();
+                if (!response.ok) throw new Error(status.error || 'Could not check provider status.');
+                setVoiceStatus(status.configured
+                    ? 'Ready when you are'
+                    : status.error || 'AI model is not configured yet. Set up your AI provider to start chatting.');
+                connectButton.textContent = status.configured
+                    ? `${status.provider || 'AI'} · ${status.model}`
+                    : 'Set up AI';
+                connectButton.setAttribute('aria-label', status.configured
+                    ? `${status.provider || 'AI'} model ${status.model} is ready. Click to check setup.`
+                    : 'Set up a local or hosted AI provider');
+                connectButton.title = status.error || '';
+            } catch (error) {
+                connectButton.textContent = 'AI server unavailable';
+                connectButton.title = error.message;
+            }
+        }
+
+        input.addEventListener('input', updateInput);
+        voiceButton.addEventListener('click', () => {
+            if (sending) return;
+            if (!recognition) {
+                setVoiceStatus('Voice input isn’t supported in this browser. Try Safari, Chrome, or Edge.');
+                return;
+            }
+            if (listening) {
+                recognition.stop();
+                listening = false;
+                setVoiceStatus('Ready when you are');
+                return;
+            }
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            try {
+                setVoiceStatus('Waking up…', 'waking');
+                recognition.start();
+            } catch (error) {
+                setVoiceStatus(`Couldn’t start voice recognition: ${error.message}`);
+            }
+        });
+        input.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage(input.value);
+            }
+        });
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            sendMessage(input.value);
+        });
+        document.getElementById('newChat').addEventListener('click', () => {
+            startNewChat();
+            showAssistantView();
+        });
+        tasksNav.addEventListener('click', showTasksView);
+        websitesNav.addEventListener('click', showWebsitesView);
+        websiteSearch.addEventListener('input', () => renderWebsites(websiteSearch.value));
+        document.getElementById('taskForm').addEventListener('submit', event => {
+            event.preventDefault();
+            if (addTask(taskTitleInput.value, taskDueInput.value || null)) {
+                taskTitleInput.value = '';
+                taskDueInput.value = '';
+                taskTitleInput.focus();
+            }
+        });
+        document.querySelector('.task-filters').addEventListener('click', event => {
+            const filterButton = event.target.closest('[data-filter]');
+            if (!filterButton) return;
+            taskFilter = filterButton.dataset.filter;
+            document.querySelectorAll('.task-filter').forEach(button => button.classList.toggle('active', button === filterButton));
+            renderTasks();
+        });
+        taskList.addEventListener('change', event => {
+            const checkbox = event.target.closest('[data-task-action="toggle"]');
+            if (!checkbox) return;
+            const task = tasks.find(item => item.id === checkbox.dataset.taskId);
+            if (!task) return;
+            task.completed = checkbox.checked;
+            saveTasks();
+            renderTasks();
+        });
+        taskList.addEventListener('click', event => {
+            const removeButton = event.target.closest('[data-task-action="delete"]');
+            if (!removeButton) return;
+            tasks = tasks.filter(task => task.id !== removeButton.dataset.taskId);
+            saveTasks();
+            renderTasks();
+        });
+        connectButton.addEventListener('click', () => {
+            configError.textContent = '';
+            settingsDialog.showModal();
+            document.getElementById('saveConnect').focus();
+        });
+        document.getElementById('cancelConnect').addEventListener('click', () => settingsDialog.close());
+        document.getElementById('providerForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const saveButton = document.getElementById('saveConnect');
+            saveButton.disabled = true;
+            saveButton.textContent = 'Checking…';
+            configError.textContent = '';
+            try {
+                const response = await fetch('/api/configure', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || `Request failed (${response.status}).`);
+                settingsDialog.close();
+                await refreshProviderStatus();
+            } catch (error) {
+                configError.textContent = error.message;
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Check connection';
+            }
+        });
+        document.querySelectorAll('.suggestion').forEach(button => {
+            button.addEventListener('click', () => sendMessage(button.dataset.prompt));
+        });
+        initializeSpeechRecognition();
+        loadTasks();
+        renderTasks();
+        renderWebsites();
+        refreshProviderStatus();
+    </script>
 </body>
 </html>
