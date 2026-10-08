@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: maya
+    runtime: ruby
+    plan: free
+    buildCommand: bundle install
+    startCommand: bundle exec ruby server.rb
+    healthCheckPath: /api/status
+    envVars:
+      - key: AI_PROVIDER
+        value: openai
+      - key: OPENAI_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: AI_MODEL
+        value: openrouter/free
+      - key: OPENAI_API_KEY
+        sync: false

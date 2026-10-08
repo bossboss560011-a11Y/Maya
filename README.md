@@ -128,3 +128,38 @@ Maye 支持 Win环境变量同时并内置 2 个 参数变量 *(变量尾不含 
 **[点击进入赞助页 >>](http://blog.arae.cc/z/about.html#打赏-赞助)**
 
 
+### Run Maya AI locally
+
+The `ui/` folder contains Maya, a local voice-first AI assistant with text chat. Start the Ruby server from the project directory:
+
+```sh
+ruby server.rb
+```
+
+Install [Ollama](https://ollama.com/download), start it, then download Maya's default local model:
+
+```sh
+ollama pull llama3.2:3b
+```
+
+The model download is about 2 GB. Open <http://127.0.0.1:8000> and choose **Set up free AI** to check that the local model is available. Ollama runs the model on your computer; there is no API key, subscription, or paid cloud API. Model performance depends on your computer.
+
+Tap the microphone and allow browser microphone access to issue a voice command; Maya speaks the reply aloud. Maya listens only after you tap the microphone and does not support a background wake word. Speech recognition depends on browser support and an internet connection. You can always use the text box instead.
+
+Open **Tasks** to add tasks, optional due dates, and mark tasks complete. By voice or text, try “Maya, add a task to call Sam tomorrow,” “What’s on my list?”, “Mark call Sam done,” or “Delete call Sam.” Task management works without an Ollama connection; tasks are saved in this browser's local storage and are not synced to other browsers or devices. Due dates are labels, not scheduled alerts.
+
+Open **Websites** in the sidebar for 48 shortcuts covering search, email, messaging, work, social media, payments, shopping, food delivery, travel, and learning. This includes Google, Gmail, WhatsApp, Google Maps, Slack, Discord, Notion, GitHub, PhonePe, Paytm, Amazon India, Swiggy, Zomato, LinkedIn, Naukri, IRCTC, Coursera, and more. Links open in a new tab and can be filtered with the search box. You can tap the microphone and say “Open Websites” to browse shortcuts, or say a site name such as “Open Gmail,” “Open WhatsApp,” or “Go to Google Maps.” Voice website commands navigate the current tab to avoid browser popup blocking; use the Websites cards when you want a new tab. Say “What voice commands can I use?” for more examples.
+
+Ruby with WEBrick and the Ollama app are required (`gem install webrick` if WEBrick is not already available). Set `OLLAMA_MODEL` to use another model already installed in Ollama.
+
+### Deploy to a public URL with Render
+
+The included `render.yaml` deploys Maya as a free Render web service and configures the hosted AI API through OpenRouter. The service gets a public `onrender.com` URL after deployment. Render's free web services may sleep when idle, and OpenRouter's free models can have usage limits, change availability, or be unavailable; neither provider guarantees unlimited free use.
+
+1. Push this project to a GitHub repository.
+2. Create an OpenRouter account and generate an API key. Keep the key private.
+3. In Render, choose **New > Blueprint**, connect the GitHub repository, and deploy the `render.yaml` blueprint.
+4. When prompted for `OPENAI_API_KEY`, enter the OpenRouter key. Render stores it as a secret environment variable.
+5. After the deploy succeeds, open the public URL shown in the Render dashboard.
+
+The blueprint selects OpenRouter's `openrouter/free` model router by default. To use a different OpenAI-compatible provider or model, update `OPENAI_BASE_URL` and `AI_MODEL` in the Render service environment. Never put provider keys in source files or commit them to Git.
