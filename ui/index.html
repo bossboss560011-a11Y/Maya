@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111114">
-    <title>Maya AI</title>
+    <title>Jarvis 2.O</title>
     <style>
         :root {
             color-scheme: dark;
@@ -152,7 +152,51 @@
         .account-name { font-size: 12px; font-weight: 600; }
         .account-status { margin-top: 2px; color: var(--muted); font-size: 11px; }
 
-        .main { position: relative; display: flex; flex: 1; min-width: 0; flex-direction: column; }
+        .main { position: relative; isolation: isolate; display: flex; flex: 1; min-width: 0; flex-direction: column; }
+        .main::before {
+            position: absolute;
+            z-index: -1;
+            inset: 66px 0 0;
+            background-image:
+                linear-gradient(90deg, #111114e8 0%, #111114b8 52%, #111114d9 100%),
+                linear-gradient(0deg, #111114c9 0%, transparent 52%, #11111470 100%),
+                radial-gradient(ellipse at 72% 38%, #9174dd24, transparent 42%),
+                radial-gradient(ellipse at 28% 88%, #5d8fbf18, transparent 38%),
+                url("./ghost-ai-background.jpg");
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            content: "";
+            pointer-events: none;
+        }
+        .ghost-backdrop {
+            position: absolute;
+            z-index: -1;
+            top: 53%;
+            right: clamp(20px, 7vw, 100px);
+            width: clamp(220px, 34vw, 440px);
+            color: #c8b6ff;
+            opacity: .17;
+            filter: drop-shadow(0 0 28px #a98bff55);
+            transform: translateY(-50%);
+            animation: ghost-drift 9s ease-in-out infinite, ghost-glow 5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .ghost-backdrop svg { display: block; width: 100%; height: auto; overflow: visible; }
+        .topbar, .workspace { position: relative; z-index: 1; }
+        @keyframes ghost-drift {
+            0%, 100% { transform: translateY(-50%) rotate(-3deg); }
+            50% { transform: translateY(calc(-50% - 18px)) rotate(3deg); }
+        }
+        @keyframes ghost-glow {
+            0%, 100% { opacity: .13; filter: drop-shadow(0 0 22px #a98bff45); }
+            50% { opacity: .23; filter: drop-shadow(0 0 42px #a98bff88); }
+        }
+        .ghost-sparkles { transform-origin: 256px 256px; animation: sparkle-pulse 3.5s ease-in-out infinite alternate; }
+        @keyframes sparkle-pulse {
+            from { opacity: .35; transform: scale(.94); }
+            to { opacity: .9; transform: scale(1.04); }
+        }
         .topbar {
             height: 66px;
             display: flex;
@@ -475,6 +519,7 @@
         .website-empty { grid-column: 1 / -1; padding: 28px 15px; color: #8b8792; font-size: 12px; text-align: center; }
 
         @media (max-width: 700px) {
+            .ghost-backdrop { top: 48%; right: 8px; width: 245px; opacity: .14; }
             .sidebar { width: 60px; flex-basis: 60px; align-items: center; padding: 18px 8px 12px; }
             .brand { padding: 0; }
             .brand-copy, .new-chat span, .nav-button span:nth-child(2), .task-count, .section-label, .history, .account-copy { display: none; }
@@ -500,9 +545,9 @@
     <div class="app">
         <aside class="sidebar" aria-label="Chat navigation">
             <div class="brand">
-                <div class="brand-mark" aria-hidden="true">M</div>
+                <div class="brand-mark" aria-hidden="true">J</div>
                 <div class="brand-copy">
-                    <div class="brand-name">Maya</div>
+                    <div class="brand-name">Jarvis 2.O</div>
                     <div class="brand-label">your AI companion</div>
                 </div>
             </div>
@@ -519,24 +564,53 @@
             <nav class="history" id="history" aria-label="Recent chats"></nav>
             <div class="sidebar-spacer"></div>
             <div class="account">
-                <div class="avatar" aria-hidden="true">M</div>
+                <div class="avatar" aria-hidden="true">J</div>
                 <div class="account-copy">
-                    <div class="account-name">Maya</div>
+                    <div class="account-name">Jarvis 2.O</div>
                     <div class="account-status">Personal workspace</div>
                 </div>
             </div>
         </aside>
 
         <main class="main">
+            <div class="ghost-backdrop" aria-hidden="true">
+                <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="ghost-fill" x1="256" y1="70" x2="256" y2="440" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#cbb8ff" stop-opacity=".42"/>
+                            <stop offset="1" stop-color="#8bd7ff" stop-opacity=".08"/>
+                        </linearGradient>
+                        <radialGradient id="ghost-eye">
+                            <stop stop-color="#fff"/>
+                            <stop offset="1" stop-color="#b9a2ff" stop-opacity=".2"/>
+                        </radialGradient>
+                    </defs>
+                    <path d="M256 69c-91 0-155 68-155 159v94c0 17 20 26 33 14l26-24 27 24a22 22 0 0 0 30 0l24-22 24 22a22 22 0 0 0 30 0l27-24 26 24c13 12 33 3 33-14v-94c0-91-64-159-155-159Z" fill="url(#ghost-fill)" stroke="currentColor" stroke-opacity=".72" stroke-width="3"/>
+                    <path d="M162 212c9-17 24-26 42-26s33 9 42 26m22 0c9-17 24-26 42-26s33 9 42 26" stroke="currentColor" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="203" cy="225" r="13" fill="url(#ghost-eye)"/>
+                    <circle cx="309" cy="225" r="13" fill="url(#ghost-eye)"/>
+                    <path d="M230 281c15 14 37 14 52 0" stroke="currentColor" stroke-opacity=".65" stroke-width="3" stroke-linecap="round"/>
+                    <path d="m256 324 33 28-33 29-33-29 33-28Zm0 0v57m-33-29h66" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+                    <circle cx="256" cy="352" r="5" fill="#d9caff"/>
+                    <circle cx="223" cy="352" r="4" fill="#a8dcff"/>
+                    <circle cx="289" cy="352" r="4" fill="#a8dcff"/>
+                    <g class="ghost-sparkles" fill="currentColor">
+                        <path d="m104 144 7 16 16 7-16 7-7 16-7-16-16-7 16-7 7-16Zm306 69 5 12 12 5-12 5-5 12-5-12-12-5 12-5 5-12Zm-55 175 5 11 11 5-11 5-5 11-5-11-11-5 11-5 5-11Z" fill-opacity=".65"/>
+                        <circle cx="140" cy="286" r="3"/>
+                        <circle cx="379" cy="302" r="3"/>
+                        <circle cx="354" cy="147" r="2.5"/>
+                    </g>
+                </svg>
+            </div>
             <header class="topbar">
-                <div class="model-name"><span class="model-dot" aria-hidden="true"></span>Maya assistant</div>
+                <div class="model-name"><span class="model-dot" aria-hidden="true"></span>Jarvis 2.O assistant</div>
                 <span class="assistant-status voice-status" id="voiceStatus" role="status" aria-live="polite">Ready when you are</span>
                 <button class="connect-button" id="connectButton" type="button">Set up free AI</button>
             </header>
-            <section class="workspace" aria-label="Maya AI chat">
+            <section class="workspace" aria-label="Jarvis 2.O AI chat">
                 <section class="tasks-view" id="tasksView" aria-label="Task manager" hidden>
                     <h1 class="tasks-heading">Your tasks</h1>
-                    <p class="tasks-description">Tell Maya what you need to do, or add and organize tasks here. Your list stays in this browser.</p>
+                    <p class="tasks-description">Tell Jarvis 2.O what you need to do, or add and organize tasks here. Your list stays in this browser.</p>
                     <form class="task-form" id="taskForm">
                         <input class="task-title-input" id="taskTitle" maxlength="240" placeholder="What do you need to do?" aria-label="Task name" required>
                         <input class="task-date-input" id="taskDue" type="date" aria-label="Task due date">
@@ -562,7 +636,7 @@
                 <div class="conversation" id="conversation" aria-live="polite">
                     <div class="welcome" id="welcome">
                         <div class="welcome-mark" id="voiceOrb" aria-hidden="true"><span class="orb-core"></span></div>
-                        <h1>Hi, I’m Maya.</h1>
+                        <h1>Hi, I’m Jarvis 2.O.</h1>
                         <p>Your voice-first AI companion. Ask me anything, or tap the microphone and say a command.</p>
                         <div class="suggestions">
                             <button class="suggestion" type="button" data-prompt="Help me plan a focused and productive day">
@@ -583,18 +657,18 @@
                         </div>
                         <div class="voice-hint">
                             <strong>Tap the microphone, then try:</strong>
-                            <span><kbd>“Maya, add a task to call Sam tomorrow.”</kbd></span>
+                            <span><kbd>“Jarvis, add a task to call Sam tomorrow.”</kbd></span>
                             <span><kbd>“What are my tasks?”</kbd> · <kbd>“Mark call Sam done.”</kbd></span>
                             <span><kbd>“Open Google.”</kbd> · <kbd>“Go to TCS Careers.”</kbd> · <kbd>“Launch YouTube.”</kbd></span>
                             <span>Open any shortcut by name, such as Gmail, WhatsApp, Google Maps, Amazon, Netflix, LinkedIn, or Naukri. Voice opens it in this tab; use Websites to open it in a new tab.</span>
                             <span><kbd>“Go back to chat.”</kbd> · <kbd>“What voice commands can I use?”</kbd></span>
-                            <span>Voice works while Maya is open; it does not listen for a wake word in the background.</span>
+                            <span>Voice works while Jarvis 2.O is open; it does not listen for a wake word in the background.</span>
                         </div>
                     </div>
                 </div>
                 <div class="composer-wrap">
                     <form class="composer" id="chatForm">
-                        <textarea id="prompt" rows="1" aria-label="Message Maya" placeholder="Message Maya..."></textarea>
+                        <textarea id="prompt" rows="1" aria-label="Message Jarvis 2.O" placeholder="Message Jarvis 2.O..."></textarea>
                         <button class="voice-button" id="voiceButton" type="button" aria-label="Start voice command" title="Tap to speak a command">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.8"/>
@@ -608,7 +682,7 @@
                         </button>
                     </form>
                     <p class="voice-command-hint">Tap the microphone to speak · try <kbd>“Open Websites”</kbd>, <kbd>“Open Gmail”</kbd>, <kbd>“Go to Google Maps”</kbd>, or <kbd>“Open WhatsApp”</kbd></p>
-                    <p class="disclaimer">Maya can run on Ollama or a hosted AI provider.</p>
+                    <p class="disclaimer">Jarvis 2.O can run on Ollama or a hosted AI provider.</p>
                 </div>
             </section>
         </main>
@@ -616,9 +690,9 @@
     <dialog id="settingsDialog" aria-labelledby="dialogTitle">
         <form id="providerForm">
             <h2 class="dialog-heading" id="dialogTitle">Set up AI</h2>
-            <p class="dialog-copy">Maya can use Ollama on this computer or a hosted AI API for a public deployment. For local use, install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama</a>, start it, then run this command in Terminal:</p>
+            <p class="dialog-copy">Jarvis 2.O can use Ollama on this computer or a hosted AI API for a public deployment. For local use, install <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama</a>, start it, then run this command in Terminal:</p>
             <p class="setup-command"><code>ollama pull llama3.2:3b</code></p>
-            <p class="dialog-copy">For hosted deployments, set OPENAI_API_KEY and OPENAI_BASE_URL in the server environment before launching Maya.</p>
+            <p class="dialog-copy">For hosted deployments, set OPENAI_API_KEY and OPENAI_BASE_URL in the server environment before launching Jarvis 2.O.</p>
             <p class="dialog-error" id="configError" role="alert"></p>
             <div class="dialog-actions">
                 <button id="cancelConnect" type="button">Cancel</button>
@@ -789,7 +863,7 @@
             if (visibleTasks.length === 0) {
                 const empty = document.createElement('div');
                 empty.className = 'task-empty';
-                empty.textContent = taskFilter === 'open' ? 'Nothing on your list yet. Add a task or tell Maya what to remember.' :
+                empty.textContent = taskFilter === 'open' ? 'Nothing on your list yet. Add a task or tell Jarvis what to remember.' :
                     taskFilter === 'completed' ? 'No completed tasks yet.' : 'Your task list is empty.';
                 taskList.append(empty);
                 return;
@@ -847,7 +921,7 @@
         }
 
         function normalizeCommandText(message) {
-            return message.trim().replace(/[.!?]+$/, '').replace(/^(?:(?:hey|okay|ok)\s+)?maya[\s,:-]+/i, '').trim();
+            return message.trim().replace(/[.!?]+$/, '').replace(/^(?:(?:hey|okay|ok)\s+)?(?:maya|jarvis(?:\s+2\.?o)?)\s*[,:-]+/i, '').trim();
         }
 
         function handleAssistantCommand(message) {
@@ -1104,7 +1178,7 @@
                 const copy = document.createElement('div');
                 copy.className = 'message-copy';
                 const strong = document.createElement('strong');
-                strong.textContent = 'Maya';
+                strong.textContent = 'Jarvis 2.O';
                 copy.append(strong, document.createTextNode(` ${typeof text === 'string' ? text : text.text}`));
                 if (linkUrl) {
                     const link = document.createElement('a');
@@ -1172,7 +1246,7 @@
                 pendingText.replaceChildren(pendingLabel, document.createTextNode(' is thinking'));
                 const typingIndicator = document.createElement('span');
                 typingIndicator.className = 'typing-indicator';
-                typingIndicator.setAttribute('aria-label', 'Maya is thinking');
+                typingIndicator.setAttribute('aria-label', 'Jarvis 2.O is thinking');
                 typingIndicator.innerHTML = '<span></span><span></span><span></span>';
                 pendingText.append(typingIndicator);
             }
