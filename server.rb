@@ -10,7 +10,7 @@ OLLAMA_BASE_URL = URI(ENV.fetch('OLLAMA_BASE_URL', 'http://127.0.0.1:11434'))
 OPENAI_BASE_URL = URI(ENV.fetch('OPENAI_BASE_URL', 'https://api.openai.com/v1'))
 MODEL = ENV.fetch('AI_MODEL', ENV.fetch('OLLAMA_MODEL', 'llama3.2:3b'))
 OPENAI_API_KEY = ENV['OPENAI_API_KEY'] || ENV['AI_API_KEY']
-ASSISTANT_INSTRUCTIONS = 'Your name is Maya. When asked your name, say Maya. You are a helpful, friendly voice-first personal assistant.'
+ASSISTANT_INSTRUCTIONS = 'Your name is Jarvis 2.O. When asked your name, say Jarvis 2.O. You are a helpful, friendly voice-first personal assistant.'
 
 def join_api_uri(base_url, path)
   base = base_url.dup
